@@ -32,6 +32,7 @@ import java.nio.channels.ReadableByteChannel;
 
 /**
  * Resource 接口的默认抽象实现。
+ * 它实现了 Resource 接口的大部分的公共实现
  *
  * 它实现了 Resource 接口的大部分的公共实现，作为 Resource 接口中的重中之重
  *
