@@ -368,6 +368,7 @@ public class BeanDefinitionParserDelegate {
 
 
 	/**
+	 * 默认的bean标签
 	 * Parses the supplied {@code <bean>} element. May return {@code null}
 	 * if there were errors during parse. Errors are reported to the
 	 * {@link org.springframework.beans.factory.parsing.ProblemReporter}.
@@ -382,7 +383,7 @@ public class BeanDefinitionParserDelegate {
 	 * if there were errors during parse. Errors are reported to the
 	 * {@link org.springframework.beans.factory.parsing.ProblemReporter}.
      *
-     * @param containingBean TODO 芋艿，需要进一步确认
+     * @param containingBean
 	 */
 	@Nullable
 	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable BeanDefinition containingBean) {
@@ -408,7 +409,7 @@ public class BeanDefinitionParserDelegate {
 			}
 		}
 
-        // 检查 beanName 的唯一性
+        // 检查 beanName 和 aliases 的唯一性
 		if (containingBean == null) {
 			checkNameUniqueness(beanName, aliases, ele);
 		}

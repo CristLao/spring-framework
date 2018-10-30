@@ -116,6 +116,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 
 
 	/**
+	 * 进行解析的前置和后置处理，目前spring是空实现
 	 * Register each bean definition within the given root {@code <beans/>} element.
 	 */
 	@SuppressWarnings("deprecation")  // for Environment.acceptsProfiles(String...)
@@ -207,7 +208,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			processAliasRegistration(ele);
 		} else if (delegate.nodeNameEquals(ele, BEAN_ELEMENT)) { // bean
 			processBeanDefinition(ele, delegate);
-		} else if (delegate.nodeNameEquals(ele, NESTED_BEANS_ELEMENT)) { // beans
+		} else if (delegate.nodeNameEquals(ele, NESTED_BEANS_ELEMENT)) { // beans需要递归解析
 			// recurse
 			doRegisterBeanDefinitions(ele);
 		}
@@ -218,7 +219,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 * from the given resource into the bean factory.
 	 */
 	protected void importBeanDefinitionResource(Element ele) {
-        // 获取 resource 的属性值
+        // 获取 resource 的属性值 <import resource="classpath:***" />
 		String location = ele.getAttribute(RESOURCE_ATTRIBUTE);
         // 为空，直接退出
 		if (!StringUtils.hasText(location)) {
@@ -233,7 +234,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		// 实际 Resource 集合，即 import 的地址，有哪些 Resource 资源
 		Set<Resource> actualResources = new LinkedHashSet<>(4);
 
-        // 判断 location 是相对路径还是绝对路径
+        // 判断 location 是相对路径还是绝对路径, 绝对路径为true
         // Discover whether the location is an absolute or relative URI
 		boolean absoluteLocation = false;
 		try {
@@ -248,6 +249,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		if (absoluteLocation) {
 			try {
                 // 添加配置文件地址的 Resource 到 actualResources 中，并加载相应的 BeanDefinition 们
+				// 递归调用 Bean 的解析过程，进行另一次的解析
 				int importCount = getReaderContext().getReader().loadBeanDefinitions(location, actualResources);
 				if (logger.isTraceEnabled()) {
 					logger.trace("Imported " + importCount + " bean definitions from URL location [" + location + "]");
@@ -262,6 +264,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			try {
 				int importCount;
 				// 创建相对地址的 Resource
+				// 先计算出绝对路径得到 Resource，然后进行解析
 				Resource relativeResource = getReaderContext().getResource().createRelative(location);
 				// 存在
 				if (relativeResource.exists()) {
