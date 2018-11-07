@@ -202,6 +202,7 @@ public class BeanDefinitionParserDelegate {
 
 	private final DocumentDefaultsDefinition defaults = new DocumentDefaultsDefinition();
 
+	// LinkedList
 	private final ParseState parseState = new ParseState();
 
 	/**
