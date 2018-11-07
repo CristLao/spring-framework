@@ -45,6 +45,7 @@ public abstract class BeanDefinitionReaderUtils {
 
 
 	/**
+	 * 该方法主要是，创建 GenericBeanDefinition 对象，并设置 parentName、className、beanClass 属性。
 	 * Create a new GenericBeanDefinition for the given parent name and class name,
 	 * eagerly loading the bean class if a ClassLoader has been specified.
 	 * @param parentName the name of the parent bean, if any

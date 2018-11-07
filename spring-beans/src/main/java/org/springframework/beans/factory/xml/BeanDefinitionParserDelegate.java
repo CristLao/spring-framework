@@ -379,6 +379,9 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	/**
+	 * <1>, <2>处还没有对 bean 标签进行解析，只是在解析动作之前做了一些功能架构，主要的工作有：
+	 * <1> 处，解析 id、name 属性，确定 aliases 集合
+	 * <2> 处，检测 beanName 是否唯一。代码如下：
 	 * Parses the supplied {@code <bean>} element. May return {@code null}
 	 * if there were errors during parse. Errors are reported to the
 	 * {@link org.springframework.beans.factory.parsing.ProblemReporter}.
@@ -387,11 +390,11 @@ public class BeanDefinitionParserDelegate {
 	 */
 	@Nullable
 	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable BeanDefinition containingBean) {
-        // 解析 id 和 name 属性
+        // <1> 解析 id 和 name 属性
 		String id = ele.getAttribute(ID_ATTRIBUTE);
 		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);
 
-		// 计算别名集合
+		// <1> 计算别名集合
 		List<String> aliases = new ArrayList<>();
 		if (StringUtils.hasLength(nameAttr)) {
 			String[] nameArr = StringUtils.tokenizeToStringArray(nameAttr, MULTI_VALUE_ATTRIBUTE_DELIMITERS);
@@ -409,12 +412,12 @@ public class BeanDefinitionParserDelegate {
 			}
 		}
 
-        // 检查 beanName 和 aliases 的唯一性
+        // <2> 检查 beanName 和 aliases 的唯一性
 		if (containingBean == null) {
 			checkNameUniqueness(beanName, aliases, ele);
 		}
 
-        // 解析属性，构造 AbstractBeanDefinition 对象
+        // <3> 解析属性，构造 AbstractBeanDefinition 对象
 		AbstractBeanDefinition beanDefinition = parseBeanDefinitionElement(ele, beanName, containingBean);
 		if (beanDefinition != null) {
 		    // beanName ，再次，使用 beanName 生成规则
@@ -478,6 +481,7 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	/**
+	 * 对属性进行解析并封装成 AbstractBeanDefinition 实例
 	 * Parse the bean definition itself, without regard to name or aliases. May return
 	 * {@code null} if problems occurred during the parsing of the bean definition.
 	 */
@@ -502,7 +506,7 @@ public class BeanDefinitionParserDelegate {
             // 创建用于承载属性的 AbstractBeanDefinition 实例
 			AbstractBeanDefinition bd = createBeanDefinition(className, parent);
 
-            // 解析默认 bean 的各种属性
+            // 解析默认 bean 的各种属性（包括lazy-init, singleton, autowire等）
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
             // 提取 description
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
@@ -543,6 +547,7 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	/**
+	 * 该方法将创建好的 GenericBeanDefinition 实例当做参数，对 bean 标签的所有属性进行解析
 	 * Apply the attributes of the given bean element to the given bean * definition.
 	 * @param ele bean declaration element
 	 * @param beanName bean name
@@ -638,6 +643,7 @@ public class BeanDefinitionParserDelegate {
 	 */
 	protected AbstractBeanDefinition createBeanDefinition(@Nullable String className, @Nullable String parentName)
 			throws ClassNotFoundException {
+		// 委托 BeanDefinitionReaderUtils 创建
 		return BeanDefinitionReaderUtils.createBeanDefinition(
 				parentName, className, this.readerContext.getBeanClassLoader());
 	}
@@ -685,6 +691,7 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	/**
+	 * 遍历所有子元素，如果为 constructor-arg 标签，则调用 #parseConstructorArgElement(Element ele, BeanDefinition bd) 方法，进行解析
 	 * Parse constructor-arg sub-elements of the given bean element.
 	 */
 	public void parseConstructorArgElements(Element beanEle, BeanDefinition bd) {
@@ -790,8 +797,9 @@ public class BeanDefinitionParserDelegate {
 					error("'index' cannot be lower than 0", ele);
 				} else {
 					try {
+						// 构造 ConstructorArgumentEntry 对象并将其加入到 ParseState 队列中。ConstructorArgumentEntry 表示构造函数的参数。
 						this.parseState.push(new ConstructorArgumentEntry(index));
-                        // 解析 ele 对应属性元素
+                        // <2> 解析 ele 对应属性元素 解析 constructor-arg 子元素
 						Object value = parsePropertyValue(ele, bd, null);
                         // 根据解析的属性元素构造一个 ValueHolder 对象
 						ConstructorArgumentValues.ValueHolder valueHolder = new ConstructorArgumentValues.ValueHolder(value);
@@ -818,6 +826,7 @@ public class BeanDefinitionParserDelegate {
 			}
 		} else {
 			try {
+				// 构造 ConstructorArgumentEntry 对象时是调用无参构造函数
 				this.parseState.push(new ConstructorArgumentEntry());
                 // 解析 ele 对应属性元素
 				Object value = parsePropertyValue(ele, bd, null);
@@ -830,7 +839,7 @@ public class BeanDefinitionParserDelegate {
 					valueHolder.setName(nameAttr);
 				}
 				valueHolder.setSource(extractSource(ele));
-                // 加入到 indexedArgumentValues 中
+				// 最后是将 ValueHolder 实例添加到 genericArgumentValues 集合中。
                 bd.getConstructorArgumentValues().addGenericArgumentValue(valueHolder);
 			} finally {
 				this.parseState.pop();
@@ -916,6 +925,7 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	/**
+	 * 解析 constructor-arg 子元素，返回结果值。
 	 * Get the value of a property element. May be a list etc.
 	 * Also used for constructor arguments, "propertyName" being null in this case.
 	 */
