@@ -840,6 +840,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	// Implementation of BeanDefinitionRegistry interface
 	//---------------------------------------------------------------------
 
+	/**
+	 *
+	 * beanDefinitionMap就是beanDefinition的缓存
+	 * @param beanName the name of the bean instance to register
+	 * @param beanDefinition definition of the bean instance to register
+	 * @throws BeanDefinitionStoreException
+	 */
 	@Override
 	public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
 			throws BeanDefinitionStoreException {
@@ -861,7 +868,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
         // 从缓存中获取指定 beanName 的 BeanDefinition
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
-		// 如果已经存在
+		// 如果已经存在 根据判断是否能够覆盖
 		if (existingDefinition != null) {
             // 如果存在但是不允许覆盖，抛出异常
             if (!isAllowBeanDefinitionOverriding()) {
