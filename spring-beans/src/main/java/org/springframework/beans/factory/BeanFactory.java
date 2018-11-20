@@ -131,7 +131,7 @@ public interface BeanFactory {
 	 * returned objects in the case of Singleton beans.
 	 * <p>Translates aliases back to the corresponding canonical bean name.
 	 * Will ask the parent factory if the bean cannot be found in this factory instance.
-	 * @param name the name of the bean to retrieve
+	 * @param name the name of the bean to retrieve 要获取 Bean 的名字
 	 * @return an instance of the bean
 	 * @throws NoSuchBeanDefinitionException if there is no bean definition
 	 * with the specified name
