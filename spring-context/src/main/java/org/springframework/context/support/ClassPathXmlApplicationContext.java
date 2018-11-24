@@ -142,7 +142,10 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 
 		super(parent);
 		setConfigLocations(configLocations);
+		// 判断是否重复注册到IoC容器
 		if (refresh) {
+			// 初始化最核心的方法
+			// 把所有的bean重新构造一遍
 			refresh();
 		}
 	}

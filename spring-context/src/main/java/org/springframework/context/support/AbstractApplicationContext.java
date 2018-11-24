@@ -542,9 +542,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				}
 
 				// Destroy already created singletons to avoid dangling resources.
+				// 删除错误的beans
 				destroyBeans();
 
 				// Reset 'active' flag.
+				// 取消注册IoC注册
 				cancelRefresh(ex);
 
 				// Propagate exception to caller.

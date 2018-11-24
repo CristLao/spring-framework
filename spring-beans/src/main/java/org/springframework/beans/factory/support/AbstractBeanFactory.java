@@ -239,12 +239,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			// We're assumably within a circular reference.
             // <3> 因为 Spring 只解决单例模式下得循环依赖，在原型模式下如果存在循环依赖则会抛出异常。
 			if (isPrototypeCurrentlyInCreation(beanName)) {
+				// 若当前 Bean 在创建，则抛出 BeanCurrentlyInCreationException 异常。
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 
             // <4> 如果当前容器中没有找到，则从父类容器中加载
 			// Check if bean definition exists in this factory.
 			BeanFactory parentBeanFactory = getParentBeanFactory();
+			// 如果 beanDefinitionMap 中不存在 beanName 的 BeanDefinition（即在 Spring bean 初始化过程中没有加载），
+			// 则尝试从 parentBeanFactory 中加载。
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 				// Not found -> check parent.
 				String nameToLookup = originalBeanName(name);
@@ -266,7 +269,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
-            // <5> 如果不是仅仅做类型检查则是创建bean，这里需要记录
+            // <5> 判断是否为类型检查。如果不是仅仅做类型检查则是创建bean，这里需要记录
 			if (!typeCheckOnly) {
 				// 指定的 Bean 标记为已经创建或即将创建
 				markBeanAsCreated(beanName);
@@ -274,8 +277,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 			try {
                 // <6> 从容器中获取 beanName 相应的 GenericBeanDefinition 对象，并将其转换为 RootBeanDefinition 对象
+				// 从 mergedBeanDefinitions 中获取 beanName 对应的 RootBeanDefinition 对象。
 				final RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
                 // 检查给定的合并的 BeanDefinition
+				// 如果这个 BeanDefinition 是子 Bean 的话，则会合并父类的相关属性。
 				checkMergedBeanDefinition(mbd, beanName, args);
 
 				// Guarantee initialization of beans that the current bean depends on.
@@ -315,7 +320,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 							// eagerly by the creation process, to allow for circular reference resolution.
 							// Also remove any beans that received a temporary reference to the bean.
                             // 显式从单例缓存中删除 Bean 实例
-                            // 因为单例模式下为了解决循环依赖，可能他已经存在了，所以销毁它。 TODO 芋艿
+                            // 因为单例模式下为了解决循环依赖，可能他已经存在了，所以销毁它。
 							destroySingleton(beanName);
 							throw ex;
 						}
@@ -1123,6 +1128,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	protected String originalBeanName(String name) {
 		String beanName = transformedBeanName(name);
 		if (name.startsWith(FACTORY_BEAN_PREFIX)) {
+			// 如果 name 是以 “&” 开头的，则加上 “&”
+			// 因为在 #transformedBeanName(String name) 方法，将 “&” 去掉了，这里补上。
 			beanName = FACTORY_BEAN_PREFIX + beanName;
 		}
 		return beanName;
@@ -1197,6 +1204,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	protected RootBeanDefinition getMergedLocalBeanDefinition(String beanName) throws BeansException {
 		// Quick check on the concurrent map first, with minimal locking.
         // 快速从缓存中获取，如果不为空，则直接返回
+		// mergedBeanDefinitions = new ConcurrentHashMap<>(256);
 		RootBeanDefinition mbd = this.mergedBeanDefinitions.get(beanName);
 		if (mbd != null) {
 			return mbd;
@@ -1534,6 +1542,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * <p>This allows the bean factory to optimize its caching for repeated
 	 * creation of the specified bean.
 	 * @param beanName the name of the bean
+	 * 已创建 Bean 的名字集合
 	 */
 	protected void markBeanAsCreated(String beanName) {
         // 没有创建
