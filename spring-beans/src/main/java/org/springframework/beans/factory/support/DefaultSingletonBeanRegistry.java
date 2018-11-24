@@ -161,9 +161,13 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	protected void addSingleton(String beanName, Object singletonObject) {
 		synchronized (this.singletonObjects) {
+			// 单例 bean 的缓存。
 			this.singletonObjects.put(beanName, singletonObject);
+			// 单例 bean Factory 的缓存。
 			this.singletonFactories.remove(beanName);
+			// “早期”创建的单例 bean 的缓存。
 			this.earlySingletonObjects.remove(beanName);
+			// 已经注册的单例缓存。
 			this.registeredSingletons.add(beanName);
 		}
 	}
@@ -241,7 +245,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		Assert.notNull(beanName, "Bean name must not be null");
         // 全局加锁
         synchronized (this.singletonObjects) {
-            // 从缓存中检查一遍
+            // 1. 从缓存中检查一遍
             // 因为 singleton 模式其实就是复用已经创建的 bean 所以这步骤必须检查
 			Object singletonObject = this.singletonObjects.get(beanName);
             //  为空，开始加载过程
@@ -254,7 +258,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
-                // 加载前置处理
+                // 2. 加载前置处理
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
@@ -438,6 +442,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
+	 * 其实将就是该映射关系保存到两个集合中：dependentBeanMap、dependenciesForBeanMap 。
 	 * Register a dependent bean for the given bean,
 	 * to be destroyed before the given bean is destroyed.
 	 * @param beanName the name of the bean
@@ -472,7 +477,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * @since 4.0
 	 */
 	protected boolean isDependent(String beanName, String dependentBeanName) {
+		// dependentBeanMap 对象保存的是依赖 beanName 之间的映射关系：beanName - > 依赖 beanName 的集合。
 		synchronized (this.dependentBeanMap) {
+			// 校验该依赖是否已经注册给当前 Bean 。
 			return isDependent(beanName, dependentBeanName, null);
 		}
 	}

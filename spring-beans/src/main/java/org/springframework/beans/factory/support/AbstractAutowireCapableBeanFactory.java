@@ -432,10 +432,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Make sure bean class is actually resolved at this point, and
 		// clone the bean definition in case of a dynamically resolved Class
 		// which cannot be stored in the shared merged bean definition.
-        // 确保此时的 bean 已经被解析了
+        // 1. 确保此时的 bean 已经被解析了
+		// 解析指定 BeanDefinition 的 class 属性。
+		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
         // 如果获取的class 属性不为null，则克隆该 BeanDefinition
         // 主要是因为该动态解析的 class 无法保存到到共享的 BeanDefinition
-		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
 			mbdToUse = new RootBeanDefinition(mbd);
 			mbdToUse.setBeanClass(resolvedClass);
@@ -443,7 +444,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Prepare method overrides.
 		try {
-            // 验证和准备覆盖方法
+            // 2. 验证和准备覆盖方法
+			// 处理 override 属性。
 			mbdToUse.prepareMethodOverrides();
 		} catch (BeanDefinitionValidationException ex) {
 			throw new BeanDefinitionStoreException(mbdToUse.getResourceDescription(),
@@ -452,7 +454,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
-            // 实例化的前置处理
+            // 3. 实例化的前置处理
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -463,7 +465,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		try {
-            // 给 BeanPostProcessors 一个机会用来返回一个代理类而不是真正的类实例
+            // 4. 给 BeanPostProcessors 一个机会用来返回一个代理类而不是真正的类实例
+			// 创建 Bean 对象。
             // AOP 的功能就是基于这个地方，参见 AbstractAutoProxyCreator
 			Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 			if (logger.isTraceEnabled()) {

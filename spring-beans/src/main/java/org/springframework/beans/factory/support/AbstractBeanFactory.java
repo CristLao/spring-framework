@@ -289,17 +289,20 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				// 对于依赖的 Bean ，它会优先加载，所以，在 Spring 的加载顺序中，在初始化某一个 Bean 的时候，首先会初始化这个 Bean 的依赖。
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
+					// 通过迭代的方式依次对依赖 bean 进行检测、校验。
+					// 如果通过，则调用 #getBean(String beanName) 方法，实例化依赖的 Bean 对象。
 					for (String dep : dependsOn) {
-                        // 若给定的依赖 bean 已经注册为依赖给定的 bean
+                        // 1. 若给定的依赖 bean 已经注册为依赖给定的 bean
                         // 即循环依赖的情况，抛出 BeanCreationException 异常
 						if (isDependent(beanName, dep)) {
 							throw new BeanCreationException(mbd.getResourceDescription(), beanName,
 									"Circular depends-on relationship between '" + beanName + "' and '" + dep + "'");
 						}
-                        // 缓存依赖调用
+                        // 2. 缓存依赖调用
 						registerDependentBean(dep, beanName);
 						try {
-                            // 递归处理依赖 Bean
+                            // 3. 递归处理依赖 Bean
+							// 处理依赖的依赖
 							getBean(dep);
 						} catch (NoSuchBeanDefinitionException ex) {
 							throw new BeanCreationException(mbd.getResourceDescription(), beanName,
@@ -330,13 +333,17 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					// It's a prototype -> create a new instance.
 					Object prototypeInstance;
 					try {
+						// <1> 加载前置处理
 						beforePrototypeCreation(beanName);
+						// <2> 创建 Bean 对象
 						prototypeInstance = createBean(beanName, mbd, args);
 					} finally {
+						// 加载后缀处理
 						afterPrototypeCreation(beanName);
 					}
+					// <4> 从 Bean 实例中获取对象
 					bean = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
-				} else {
+				} else { // request 等等其他的 scope
 				    // 获得 scopeName 对应的 Scope 对象
                     String scopeName = mbd.getScope();
 					final Scope scope = this.scopes.get(scopeName);
@@ -1366,6 +1373,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			if (mbd.hasBeanClass()) {
 				return mbd.getBeanClass();
 			}
+			// 如果有系统权限限制就是用特权方式访问文件
 			if (System.getSecurityManager() != null) {
 				return AccessController.doPrivileged((PrivilegedExceptionAction<Class<?>>) () ->
 					doResolveBeanClass(mbd, typesToMatch), getAccessControlContext());
