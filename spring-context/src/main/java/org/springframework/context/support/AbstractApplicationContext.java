@@ -861,6 +861,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
 		// Initialize conversion service for this context.
         // TODO 芋艿 ConversionService 《Spring 源码深度解析》有说明
+		// 这是 Spring3 以后新加的代码， 为容器指定一个转换服务(ConversionService)
+		// 在对某些 Bean 属性进行转换时使用
 		if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &&
 				beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class)) {
 			beanFactory.setConversionService(
@@ -891,6 +893,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 		// Instantiate all remaining (non-lazy-init) singletons.
         // 初始化非延迟加载的单例
+		// 对配置了 lazy-init 属性的单态模式 Bean 进行预实例化处理
 		beanFactory.preInstantiateSingletons();
 	}
 
